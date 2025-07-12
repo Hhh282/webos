@@ -3,21 +3,24 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WebOS Lite</title>
+<title>WebOS Lite - Linux Edition</title>
 <style>
-  /* Basic reset */
+  /* Reset & base */
   body, html {
     margin: 0; padding: 0; height: 100%;
-    background: #008080;
-    font-family: Arial, sans-serif;
+    background: #2e3436; /* dark Linux gray */
+    font-family: 'Ubuntu', 'Ubuntu Mono', monospace, sans-serif;
+    color: #eeeeec;
     user-select: none;
   }
 
+  /* Desktop */
   #desktop {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 40px);
     padding: 20px;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/3/35/Ubuntu_logo.svg') no-repeat center center/contain;
     display: flex;
     gap: 20px;
     flex-wrap: wrap;
@@ -26,39 +29,74 @@
   .icon {
     width: 80px;
     height: 80px;
-    background: #eee;
-    border-radius: 10px;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    background: rgba(255,255,255,0.1);
+    border-radius: 6px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: 30px;
     cursor: pointer;
-    flex-direction: column;
-    user-select: none;
+    color: #eeeeec;
+    font-size: 32px;
+    text-align: center;
+    padding: 8px;
+    font-weight: 600;
   }
 
   .icon:hover {
-    background: #ddd;
+    background: rgba(255,255,255,0.2);
   }
 
+  /* Panel / Taskbar */
+  #panel {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.7);
+  }
+
+  #panel .taskbar-button {
+    background: #3b3b3b;
+    border-radius: 4px;
+    margin-right: 8px;
+    padding: 6px 12px;
+    color: #eeeeec;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+    transition: background 0.2s ease;
+  }
+  #panel .taskbar-button:hover {
+    background: #555555;
+  }
+
+  /* Windows */
   .window {
     position: absolute;
-    top: 50px;
-    left: 50px;
-    width: 400px;
-    height: 300px;
-    background: white;
-    border: 2px solid #444;
-    box-shadow: 0 0 10px rgba(0,0,0,0.6);
+    top: 80px;
+    left: 80px;
+    width: 500px;
+    height: 350px;
+    background: #3b3b3b;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.7);
+    color: #eeeeec;
     display: flex;
     flex-direction: column;
+    user-select: text;
+    overflow: hidden;
   }
 
   .title-bar {
-    background: #444;
-    color: white;
-    padding: 5px 10px;
+    background: #2e3436;
+    padding: 8px 12px;
+    font-weight: 700;
+    font-size: 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -66,28 +104,43 @@
     user-select: none;
   }
 
+  .title-bar button {
+    background: transparent;
+    border: none;
+    color: #eeeeec;
+    font-weight: 900;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  .title-bar button:hover {
+    color: #ff5555;
+  }
+
   .window-content {
-    padding: 10px;
     flex-grow: 1;
-    overflow: auto;
+    background: #2e3436;
+    padding: 15px;
+    overflow-y: auto;
+    font-family: monospace, monospace;
   }
 
   textarea {
-    flex-grow: 1;
     width: 100%;
+    height: 100%;
+    background: #1a1a1a;
     border: none;
-    resize: none;
-    font-family: monospace;
+    color: #eeeeec;
+    font-family: monospace, monospace;
     font-size: 14px;
     padding: 10px;
+    resize: none;
+    border-radius: 4px;
   }
 
-  /* Terminal styles */
+  /* Terminal */
   #terminal .window-content {
-    background: #000;
-    color: #0f0;
-    font-family: monospace;
-    padding: 10px;
+    background: #000000;
+    color: #00ff00;
     display: flex;
     flex-direction: column;
   }
@@ -95,15 +148,16 @@
   #terminal-output {
     flex-grow: 1;
     overflow-y: auto;
+    white-space: pre-wrap;
   }
 
   #terminal-input {
     width: 100%;
-    background: #000;
-    color: #0f0;
+    background: #000000;
+    color: #00ff00;
     border: none;
     outline: none;
-    font-family: monospace;
+    font-family: monospace, monospace;
     padding: 5px;
   }
 </style>
@@ -111,35 +165,38 @@
 <body>
 
 <div id="desktop">
-  <!-- Desktop Icons -->
-  <div class="icon" onclick="openApp('fileExplorer')">📁 File Explorer</div>
-  <div class="icon" onclick="openApp('notepad')">📝 Notepad</div>
+  <div class="icon" onclick="openApp('fileManager')">🗂️ File Manager</div>
+  <div class="icon" onclick="openApp('notepad')">📝 Text Editor</div>
   <div class="icon" onclick="openTerminal()">💻 Terminal</div>
 </div>
 
-<!-- File Explorer Window -->
-<div id="fileExplorer" class="window" style="display:none;">
-  <div class="title-bar">
-    <span>File Explorer</span>
-    <button onclick="closeApp('fileExplorer')">X</button>
-  </div>
-  <div class="window-content" id="file-explorer-content"></div>
+<div id="panel">
+  <!-- Taskbar buttons will appear here -->
 </div>
 
-<!-- Notepad Window -->
+<!-- File Manager Window -->
+<div id="fileManager" class="window" style="display:none;">
+  <div class="title-bar">
+    <span>File Manager</span>
+    <button onclick="closeApp('fileManager')">×</button>
+  </div>
+  <div class="window-content" id="file-manager-content"></div>
+</div>
+
+<!-- Text Editor Window -->
 <div id="notepad" class="window" style="display:none;">
   <div class="title-bar">
-    <span>Notepad</span>
-    <button onclick="closeApp('notepad')">X</button>
+    <span>Text Editor</span>
+    <button onclick="closeApp('notepad')">×</button>
   </div>
-  <textarea id="notepad-text" rows="10" cols="40"></textarea>
+  <textarea id="notepad-text"></textarea>
 </div>
 
 <!-- Terminal Window -->
 <div id="terminal" class="window" style="display:none; width: 600px; height: 400px;">
   <div class="title-bar">
     <span>Terminal</span>
-    <button onclick="closeApp('terminal')">X</button>
+    <button onclick="closeApp('terminal')">×</button>
   </div>
   <div class="window-content" id="terminal-content">
     <div id="terminal-output"></div>
@@ -148,270 +205,317 @@
 </div>
 
 <script>
-// ========== Fake File System ==========
+  // ======= Fake File System =======
+  const fileSystem = {
+    root: [
+      { type: "folder", name: "home", contents: [
+        { type: "folder", name: "user", contents: [
+          { type: "file", name: "welcome.txt", content: "Welcome to your Linux-style WebOS Lite!" },
+          { type: "file", name: "notes.txt", content: "Remember to have fun coding!" }
+        ]}
+      ]},
+      { type: "folder", name: "etc", contents: [] },
+      { type: "folder", name: "bin", contents: [] }
+    ]
+  };
 
-const fileSystem = {
-  "root": [
-    { type: "folder", name: "Documents", contents: [
-      { type: "file", name: "readme.txt", content: "Welcome to WebOS Lite! This is a fake file system." },
-      { type: "file", name: "todo.txt", content: "1. Build cool apps\n2. Have fun\n3. Repeat" }
-    ]},
-    { type: "file", name: "hello.txt", content: "Hello from the root folder!" }
-  ]
-};
+  let currentPath = ["root"];
 
-let currentPath = ["root"];
-
-// ========== App Window Controls ==========
-
-function openApp(appId) {
-  document.getElementById(appId).style.display = "flex";
-  if (appId === "fileExplorer") renderFileExplorer();
-  if (appId === "terminal") openTerminal();
-}
-
-function closeApp(appId) {
-  document.getElementById(appId).style.display = "none";
-}
-
-// ========== File Explorer ==========
-
-function renderFileExplorer() {
-  const container = document.getElementById("file-explorer-content");
-  container.innerHTML = "";
-
-  // Show path
-  const pathBar = document.createElement("div");
-  pathBar.style.marginBottom = "10px";
-  pathBar.textContent = "/" + currentPath.slice(1).join("/");
-  container.appendChild(pathBar);
-
-  // Back button
-  if (currentPath.length > 1) {
-    const backBtn = document.createElement("button");
-    backBtn.textContent = "⬅️ Back";
-    backBtn.onclick = () => {
-      currentPath.pop();
-      renderFileExplorer();
-    };
-    container.appendChild(backBtn);
+  // ======= App Window Controls =======
+  function openApp(appId) {
+    const win = document.getElementById(appId);
+    if (!win) return;
+    win.style.display = "flex";
+    bringToFront(win);
+    addTaskbarButton(appId);
+    if (appId === "fileManager") renderFileManager();
+    if (appId === "terminal") openTerminal();
   }
 
-  // List files/folders
-  const folder = getFolderAtPath(currentPath);
-  folder.forEach(item => {
-    const itemDiv = document.createElement("div");
-    itemDiv.style.padding = "5px";
-    itemDiv.style.cursor = "pointer";
-    itemDiv.textContent = item.type === "folder" ? "📁 " + item.name : "📄 " + item.name;
+  function closeApp(appId) {
+    const win = document.getElementById(appId);
+    if (!win) return;
+    win.style.display = "none";
+    removeTaskbarButton(appId);
+  }
 
-    itemDiv.onclick = () => {
-      if (item.type === "folder") {
-        currentPath.push(item.name);
-        renderFileExplorer();
-      } else if (item.type === "file") {
-        openFileInNotepad(item);
+  // ======= Taskbar =======
+  const panel = document.getElementById("panel");
+
+  function addTaskbarButton(appId) {
+    if (document.getElementById("taskbtn-" + appId)) return; // already exists
+    const btn = document.createElement("div");
+    btn.id = "taskbtn-" + appId;
+    btn.className = "taskbar-button";
+    btn.textContent = appId === "fileManager" ? "File Manager" : appId === "notepad" ? "Text Editor" : "Terminal";
+    btn.onclick = () => toggleWindow(appId);
+    panel.appendChild(btn);
+  }
+
+  function removeTaskbarButton(appId) {
+    const btn = document.getElementById("taskbtn-" + appId);
+    if (btn) panel.removeChild(btn);
+  }
+
+  function toggleWindow(appId) {
+    const win = document.getElementById(appId);
+    if (!win) return;
+    if (win.style.display === "none") {
+      openApp(appId);
+    } else {
+      closeApp(appId);
+    }
+  }
+
+  // ======= Bring window to front =======
+  let topZ = 10;
+  function bringToFront(win) {
+    topZ++;
+    win.style.zIndex = topZ;
+  }
+
+  // ======= Draggable Windows =======
+  document.querySelectorAll(".window").forEach(win => {
+    const bar = win.querySelector(".title-bar");
+    let isDragging = false;
+    let offsetX, offsetY;
+
+    bar.addEventListener("mousedown", e => {
+      isDragging = true;
+      bringToFront(win);
+      offsetX = e.clientX - win.offsetLeft;
+      offsetY = e.clientY - win.offsetTop;
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", e => {
+      if (isDragging) {
+        win.style.left = (e.clientX - offsetX) + "px";
+        win.style.top = (e.clientY - offsetY) + "px";
       }
-    };
+    });
 
-    container.appendChild(itemDiv);
-  });
-}
-
-function getFolderAtPath(path) {
-  let folder = fileSystem;
-  for (let i = 0; i < path.length; i++) {
-    if (i === 0) {
-      folder = fileSystem[path[i]];
-    } else {
-      const next = folder.find(f => f.type === "folder" && f.name === path[i]);
-      folder = next ? next.contents : [];
-    }
-  }
-  return folder || [];
-}
-
-function openFileInNotepad(file) {
-  openApp("notepad");
-  const textarea = document.getElementById("notepad-text");
-  textarea.value = file.content || "";
-}
-
-// ========== Draggable Windows ==========
-
-document.querySelectorAll('.window').forEach(win => {
-  let isDragging = false;
-  let offset = { x: 0, y: 0 };
-
-  const bar = win.querySelector('.title-bar');
-  bar.addEventListener('mousedown', e => {
-    isDragging = true;
-    offset.x = e.clientX - win.offsetLeft;
-    offset.y = e.clientY - win.offsetTop;
+    document.addEventListener("mouseup", () => {
+      isDragging = false;
+    });
   });
 
-  document.addEventListener('mousemove', e => {
-    if (isDragging) {
-      win.style.left = `${e.clientX - offset.x}px`;
-      win.style.top = `${e.clientY - offset.y}px`;
+  // ======= File Manager =======
+  function renderFileManager() {
+    const container = document.getElementById("file-manager-content");
+    container.innerHTML = "";
+
+    // Show path
+    const pathBar = document.createElement("div");
+    pathBar.style.marginBottom = "10px";
+    pathBar.textContent = "/" + currentPath.slice(1).join("/");
+    container.appendChild(pathBar);
+
+    // Back button
+    if (currentPath.length > 1) {
+      const backBtn = document.createElement("button");
+      backBtn.textContent = "⬅️ Back";
+      backBtn.onclick = () => {
+        currentPath.pop();
+        renderFileManager();
+      };
+      container.appendChild(backBtn);
     }
-  });
 
-  document.addEventListener('mouseup', () => isDragging = false);
-});
+    // List files/folders
+    const folder = getFolderAtPath(currentPath);
+    folder.forEach(item => {
+      const itemDiv = document.createElement("div");
+      itemDiv.style.padding = "5px";
+      itemDiv.style.cursor = "pointer";
+      itemDiv.textContent = item.type === "folder" ? "📁 " + item.name : "📄 " + item.name;
 
-// ========== Fake Unix Terminal ==========
+      itemDiv.onclick = () => {
+        if (item.type === "folder") {
+          currentPath.push(item.name);
+          renderFileManager();
+        } else if (item.type === "file") {
+          openFileInNotepad(item);
+        }
+      };
 
-const unixFS = {
-  "/": {
-    type: "folder",
-    contents: {
-      bin: { type: "folder", contents: { "ls": { type: "file", content: "List directory contents" } } },
-      etc: { type: "folder", contents: {} },
-      home: { type: "folder", contents: {
-        user: { type: "folder", contents: {
-          "readme.txt": { type: "file", content: "Welcome to your fake Unix home!" }
-        }}
-      }},
-      usr: { type: "folder", contents: {} },
-      var: { type: "folder", contents: {} }
+      container.appendChild(itemDiv);
+    });
+  }
+
+  function getFolderAtPath(path) {
+    let folder = fileSystem;
+    for (let i = 0; i < path.length; i++) {
+      if (i === 0) {
+        folder = fileSystem[path[i]];
+      } else {
+        const next = folder.find(f => f.type === "folder" && f.name === path[i]);
+        folder = next ? next.contents : [];
+      }
     }
+    return folder || [];
   }
-};
 
-let currentDir = "/home/user";
+  function openFileInNotepad(file) {
+    openApp("notepad");
+    const textarea = document.getElementById("notepad-text");
+    textarea.value = file.content || "";
+  }
 
-function openTerminal() {
-  openApp("terminal");
-  printToTerminal(`Welcome to WebOS Lite Terminal\nType 'help' for commands\n\n`);
-  setPrompt();
-}
-
-function setPrompt() {
-  const input = document.getElementById("terminal-input");
-  input.value = "";
-  input.placeholder = `${currentDir} $ `;
-  input.focus();
-}
-
-function printToTerminal(text) {
-  const output = document.getElementById("terminal-output");
-  output.innerHTML += text.replace(/\n/g, "<br>") + "<br>";
-  output.parentElement.scrollTop = output.parentElement.scrollHeight; // scroll down
-}
-
-document.getElementById("terminal-input").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") {
-    const command = e.target.value.trim();
-    if (command) {
-      printToTerminal(`<span style="color:#0ff;">${currentDir} $</span> ${command}`);
-      handleCommand(command);
+  // ======= Terminal =======
+  const unixFS = {
+    "/": {
+      type: "folder",
+      contents: {
+        bin: { type: "folder", contents: { ls: { type: "file", content: "List directory contents" } } },
+        etc: { type: "folder", contents: {} },
+        home: {
+          type: "folder",
+          contents: {
+            user: {
+              type: "folder",
+              contents: {
+                "readme.txt": { type: "file", content: "Welcome to your fake Unix home!" }
+              }
+            }
+          }
+        },
+        usr: { type: "folder", contents: {} },
+        var: { type: "folder", contents: {} }
+      }
     }
-    e.target.value = "";
-  }
-});
+  };
 
-function handleCommand(input) {
-  const args = input.split(" ");
-  const cmd = args[0];
-  const params = args.slice(1);
+  let currentDir = "/home/user";
 
-  switch(cmd) {
-    case "help":
-      printToTerminal("Available commands: ls, cd, pwd, cat, clear, help");
-      break;
-    case "ls":
-      listDir();
-      break;
-    case "pwd":
-      printToTerminal(currentDir);
-      break;
-    case "cd":
-      changeDir(params[0]);
-      break;
-    case "cat":
-      catFile(params[0]);
-      break;
-    case "clear":
-      clearTerminal();
-      break;
-    default:
-      printToTerminal(`Command not found: ${cmd}`);
-  }
-}
-
-function getDir(path) {
-  if (!path) path = currentDir;
-  const parts = path.split("/").filter(Boolean);
-  let dir = unixFS["/"];
-  for (const part of parts) {
-    if (dir.contents[part] && dir.contents[part].type === "folder") {
-      dir = dir.contents[part];
-    } else {
-      return null;
-    }
-  }
-  return dir;
-}
-
-function listDir() {
-  const dir = getDir(currentDir);
-  if (!dir) {
-    printToTerminal("Directory not found");
-    return;
-  }
-  const items = Object.keys(dir.contents);
-  printToTerminal(items.join("  "));
-}
-
-function changeDir(target) {
-  if (!target) {
-    currentDir = "/home/user";
+  function openTerminal() {
+    openApp("terminal");
+    printToTerminal(`Welcome to WebOS Lite Terminal\nType 'help' for commands\n\n`);
     setPrompt();
-    return;
+    document.getElementById("terminal-input").focus();
   }
-  if (target === "..") {
-    if (currentDir !== "/") {
-      currentDir = currentDir.split("/").slice(0, -1).join("/");
-      if (currentDir === "") currentDir = "/";
-    }
-  } else if (target.startsWith("/")) {
-    if (getDir(target)) {
-      currentDir = target;
-    } else {
-      printToTerminal(`No such directory: ${target}`);
-    }
-  } else {
-    const newPath = currentDir.endsWith("/") ? currentDir + target : currentDir + "/" + target;
-    if (getDir(newPath)) {
-      currentDir = newPath;
-    } else {
-      printToTerminal(`No such directory: ${target}`);
-    }
-  }
-  setPrompt();
-}
 
-function catFile(filename) {
-  if (!filename) {
-    printToTerminal("Specify a file");
-    return;
+  function setPrompt() {
+    const input = document.getElementById("terminal-input");
+    input.value = "";
+    input.placeholder = `${currentDir} $ `;
+    input.focus();
   }
-  const dir = getDir(currentDir);
-  if (!dir) {
-    printToTerminal("Directory not found");
-    return;
-  }
-  if (dir.contents[filename] && dir.contents[filename].type === "file") {
-    printToTerminal(dir.contents[filename].content);
-  } else {
-    printToTerminal(`No such file: ${filename}`);
-  }
-}
 
-function clearTerminal() {
-  document.getElementById("terminal-output").innerHTML = "";
-}
+  function printToTerminal(text) {
+    const output = document.getElementById("terminal-output");
+    output.innerHTML += text.replace(/\n/g, "<br>") + "<br>";
+    output.parentElement.scrollTop = output.parentElement.scrollHeight; // scroll down
+  }
+
+  document.getElementById("terminal-input").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      const command = e.target.value.trim();
+      if (command) {
+        printToTerminal(`<span style="color:#0ff;">${currentDir} $</span> ${command}`);
+        handleCommand(command);
+      }
+      e.target.value = "";
+    }
+  });
+
+  function handleCommand(input) {
+    const args = input.split(" ");
+    const cmd = args[0];
+    const params = args.slice(1);
+
+    switch (cmd) {
+      case "help":
+        printToTerminal("Available commands: ls, cd, pwd, cat, clear, help");
+        break;
+      case "ls":
+        listDir();
+        break;
+      case "pwd":
+        printToTerminal(currentDir);
+        break;
+      case "cd":
+        changeDir(params[0]);
+        break;
+      case "cat":
+        catFile(params[0]);
+        break;
+      case "clear":
+        clearTerminal();
+        break;
+      default:
+        printToTerminal(`Command not found: ${cmd}`);
+    }
+  }
+
+  function getDir(path) {
+    if (!path) path = currentDir;
+    const parts = path.split("/").filter(Boolean);
+    let dir = unixFS["/"];
+    for (let p of parts) {
+      if (dir.contents[p] && dir.contents[p].type === "folder") {
+        dir = dir.contents[p];
+      } else {
+        return null;
+      }
+    }
+    return dir;
+  }
+
+  function listDir() {
+    const dir = getDir();
+    if (!dir) {
+      printToTerminal("Directory not found.");
+      return;
+    }
+    const files = Object.keys(dir.contents).join("  ");
+    printToTerminal(files);
+  }
+
+  function changeDir(path) {
+    if (!path || path === "~") {
+      currentDir = "/home/user";
+      setPrompt();
+      return;
+    }
+    if (path === "..") {
+      const parts = currentDir.split("/").filter(Boolean);
+      parts.pop();
+      currentDir = "/" + parts.join("/");
+      setPrompt();
+      return;
+    }
+    let newPath = path.startsWith("/") ? path : currentDir + "/" + path;
+    const dir = getDir(newPath);
+    if (dir) {
+      currentDir = newPath.replace(/\/+/g, "/");
+      setPrompt();
+    } else {
+      printToTerminal("No such directory: " + path);
+    }
+  }
+
+  function catFile(filename) {
+    if (!filename) {
+      printToTerminal("Usage: cat filename");
+      return;
+    }
+    const dir = getDir();
+    if (!dir || !dir.contents[filename]) {
+      printToTerminal("File not found: " + filename);
+      return;
+    }
+    const file = dir.contents[filename];
+    if (file.type !== "file") {
+      printToTerminal(filename + " is not a file.");
+      return;
+    }
+    printToTerminal(file.content);
+  }
+
+  function clearTerminal() {
+    document.getElementById("terminal-output").innerHTML = "";
+  }
 </script>
 
 </body>
